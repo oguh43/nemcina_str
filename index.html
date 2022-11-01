@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Aspekte Neu odpovedníky :)</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		input[type=text],
+		select,
+		textarea {
+			width: 100%;
+			padding: 12px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			resize: vertical;
+		}
+
+		label {
+			padding: 12px 12px 12px 0;
+			display: inline-block;
+		}
+
+		input[type=submit] {
+			background-color: #04AA6D;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			float: right;
+		}
+
+		input[type=submit]:hover {
+			background-color: #45a049;
+		}
+
+		.container {
+			border-radius: 5px;
+			background-color: #f2f2f2;
+			padding: 20px;
+		}
+
+		.col-25 {
+			float: left;
+			width: 25%;
+			margin-top: 6px;
+		}
+
+		.col-75 {
+			float: left;
+			width: 75%;
+			margin-top: 6px;
+		}
+
+		/* Clear floats after the columns */
+		.row:after {
+			content: "";
+			display: table;
+			clear: both;
+		}
+
+		/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+		@media screen and (max-width: 600px) {
+
+			.col-25,
+			.col-75,
+			input[type=submit] {
+				width: 100%;
+				margin-top: 0;
+			}
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="container">
+		<h2>Nemecký odpovedníček</h2>
+		<form id="mainForm">
+			<div class="row">
+				<div class="col-25">
+					<label for="ucORpz">Kniha?</label>
+				</div>
+				<div class="col-75">
+					<select name="ucORpz" id="ucORpz" onChange="ucORpzSelect(this)">
+						<option value="uceb">Učebnica</option>
+						<option value="prac">Pracovný zošit</option>
+						<option value="test">Testy</option>
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-25">
+					<label for="kapitoly">Kapitola?</label>
+				</div>
+				<div class="col-75">
+					<select name="kapitoly" id="kapitoly" onChange="kapitolaSelect(this)">
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-25">
+					<label for="part">Časť?</label>
+				</div>
+				<div class="col-75">
+					<select name="part" id="part" onChange="partSelect(this)">
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-25">
+					<label for="cvicenie">Cvičenie?</label>
+				</div>
+				<div class="col-75">
+					<select name="cvicenie" id="cvicenie">
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				<input type="submit" style="margin-top: 20px" value="Submit">
+			</div>
+		</form>
+	</div>
+
+	<div id="picture"></div>
+
+	<div id="status">
+
+	</div>
+</body>
+<script src="https://cdn.socket.io/4.5.3/socket.io.min.js"
+	integrity="sha384-WPFUvHkB1aHA5TDSZi6xtDgkF0wXJcIIxXhC6h8OT8EH3fC5PWro5pWJ1THjcfEi"
+	crossorigin="anonymous"></script>
+<script>
+	Object.defineProperty(String.prototype, 'capitalize', {
+		value: function () {
+			return this.charAt(0).toUpperCase() + this.slice(1);
+		},
+		enumerable: false
+	});
+	var socket = io.connect('http://localhost:3000');
+	var testy = [
+		"kapitel1",
+		"kapitel2",
+		"kapitel3",
+		"kapitel4",
+		"kapitel5",
+		"kapitel6",
+		"kapitel7",
+		"kapitel8",
+		"kapitel9",
+		"kapitel10"
+	]
+	var data = {}
+	socket.on("initialData", render)
+	function render(data) {
+		globalThis.data = data
+		ucORpzSelect({ "value": "uceb" })
+	}
+
+	function ucORpzSelect(par) {
+		let element = document.getElementById("kapitoly")
+		element.innerHTML = ""
+		if (par.value !== "test") {
+			Object.keys(data[par.value]).forEach(key => {
+				element.innerHTML += `<option value=\"${key}\">${key.replace(/([^0-9])([0-9])/g, '$1 $2').capitalize()}</option>`
+			})
+			document.getElementById("part").disabled = false
+			document.getElementById("cvicenie").disabled = false
+			kapitolaSelect({ "value": "kapitel1" })
+		} else {
+			testy.forEach(key => {
+				element.innerHTML += `<option value=\"${key}\">${key.replace(/([^0-9])([0-9])/g, '$1 $2').capitalize()}</option>`
+			})
+			document.getElementById("part").disabled = true
+			document.getElementById("cvicenie").disabled = true
+		}
+	}
+
+	function kapitolaSelect(par) {
+		let element = document.getElementById("part")
+		element.innerHTML = ""
+		Object.keys(data[document.getElementById("ucORpz").value][par.value]).forEach(key => {
+			element.innerHTML += `<option value=\"${key}\"${data[document.getElementById("ucORpz").value][par.value][key].length === 0 ? " disabled" : ""}>${key.capitalize()}</option>`
+		})
+		let a = firstNonEmpty(data[document.getElementById("ucORpz").value][par.value])
+		partSelect({ "value": firstNonEmpty(data[document.getElementById("ucORpz").value][par.value]) })
+	}
+
+	function partSelect(par) {
+		let element = document.getElementById("cvicenie")
+		element.innerHTML = ""
+		data[document.getElementById("ucORpz").value][document.getElementById("kapitoly").value][par.value].forEach(key => {
+			element.innerHTML += `<option value=\"${key}\">${key.split(".")[0].replace("u", "ü").capitalize()}</option>`
+		})
+	}
+
+	function firstNonEmpty(kapitelObj) {
+		let res = "";
+		Object.keys(kapitelObj).forEach(key => {
+			if (res !== "") {
+				return
+			}
+			if (kapitelObj[key].length > 0) {
+				res = key
+			}
+		})
+		return res
+	}
+
+	document.getElementById("mainForm").addEventListener("submit", e => {
+		e.preventDefault()
+		if (document.getElementById("ucORpz").value !== "test") {
+			socket.emit('getPicture', {
+				base: document.getElementById("ucORpz").value,
+				kapitola: document.getElementById("kapitoly").value,
+				part: document.getElementById("part").value,
+				cvicenie: document.getElementById("cvicenie").value,
+			});
+		} else {
+			socket.emit('getPicture', {
+				base: document.getElementById("ucORpz").value,
+				kapitola: document.getElementById("kapitoly").value,
+				part: btoa(prompt("Meno?").toLowerCase()),
+				cvicenie: btoa(prompt("Heslo?").toLowerCase()),
+			});
+		}
+	})
+
+	socket.on("picture", data => {
+		document.getElementById("picture").innerHTML = ""
+		data.img.forEach(img => {
+			document.getElementById("picture").innerHTML += `<img src="data:image/png;base64, ${img}" onContextMenu="alert('Hihi, nie!\n:P');return false;" style="width: 100%; height: auto;"/>`
+		})
+	})
+	socket.on("status", data => {
+		let st = document.getElementById("status");
+		st.innerHTML = "<h1>Server status</h1>";
+		["Connections", "Uptime", "Hits"].forEach(k => {
+			st.innerHTML += `<b>${k}: </b>${data[k.toLowerCase()]}<br>`
+		})
+		st.innerHTML += "<b>Memory:</b><br>"
+		Object.keys(data.memory).forEach(mem => {
+			st.innerHTML += `&emsp;<b>${mem}: </b>${data.memory[mem]}<br>`
+		})
+	})
+</script>
+
+</html>
