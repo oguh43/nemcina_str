@@ -20,7 +20,7 @@ const errImg = fs.readFileSync(`./img/err.png`,"base64")
 const app = require('express')()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
-const port = 9999
+const port = 80
 
 app.get('/nemcina', (req, res) => {
 	res.sendFile(__dirname + '/index.html')
