@@ -22,7 +22,7 @@ const server = require('http').Server(app)
 const io = require('socket.io')(server)
 const port = 3000
 
-app.get('/', (req, res) => {
+app.get('/nemcina', (req, res) => {
 	res.sendFile(__dirname + '/index.html')
 })
 
