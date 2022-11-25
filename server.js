@@ -20,12 +20,14 @@ const errImg = fs.readFileSync(`./img/err.png`,"base64")
 const app = require('express')()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
-const port = 80
+const port = 5000
 
 app.get('/nemcina', (req, res) => {
 	res.sendFile(__dirname + '/index.html')
 })
-
+app.get('/', (req, res) => {
+	res.redirect("/nemcina")
+})
 server.listen(port, () => {
 	console.log(`Example app listening on port ${port}`)
 })
